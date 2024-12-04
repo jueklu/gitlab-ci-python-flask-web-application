@@ -1,0 +1,26 @@
+# Use the latest Python-slime (Debian 12) base image
+FROM python:slim AS builder
+
+# Set the working directory inside the container to /app
+WORKDIR /app
+
+# Copy the contents of the "flask-app" directory to "/app" inside the container
+ADD flask-app/ /app/
+
+# Install the dependencies listed in "requirements.txt"
+RUN pip install -r requirements.txt
+
+# Expose port 8080 for the application
+EXPOSE 8080
+
+# Create a non-root user and group
+RUN groupadd appgroup && useradd -g appgroup appuser
+
+# Set permissions for the application directory
+RUN chown -R appuser:appgroup /app
+
+# Switch to the non-root user
+USER appuser
+
+# Run the app.py file with Python when the container starts
+ENTRYPOINT ["python", "app.py"]

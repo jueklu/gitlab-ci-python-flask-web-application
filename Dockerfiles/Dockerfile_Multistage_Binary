@@ -1,0 +1,44 @@
+### Stage 1: Build and Compile with PyInstaller
+
+# Use Python image as the base image / Label image as "builder"
+FROM python:3.13 AS builder
+
+# Set the working directory inside the container to /app
+WORKDIR /app
+
+# Copy the contents of the "flask-app" directory to "/app" inside the container
+COPY flask-app/. /app
+
+# Install the dependencies listed in "requirements.txt" and PyInstaller
+RUN pip install -r requirements.txt pyinstaller
+
+# Use PyInstaller to create a standalone binary for "app.py"
+RUN pyinstaller --onefile app.py
+
+
+
+### Stage 2: Final Container with Standalone Binary
+
+# Use a lightweight Debian image for the final stage
+FROM debian:bookworm-slim
+
+# Install dependencies to run the Python binary
+RUN apt-get update && apt-get install -y libstdc++6
+
+# Define working directory
+WORKDIR /app
+
+# Copy the standalone binary from the builder stage
+COPY --from=builder /app/dist/app /app/
+
+# Create a non-root user
+RUN useradd -m -d /app -s /bin/bash appuser
+
+# Switch to "appuser"
+USER appuser
+
+# Expose port 8080 for the application
+EXPOSE 8080
+
+# Run the standalone binary when the container starts
+ENTRYPOINT ["/app/app"]

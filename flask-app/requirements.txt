@@ -1,0 +1,2 @@
+# Flask web framework version 3.1.0
+Flask==3.1.0
